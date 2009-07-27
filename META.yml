@@ -1,0 +1,26 @@
+---
+abstract: 'Tenjin view class for Catalyst.'
+author:
+  - 'Ido Perelmutter <ido50@yahoo.com>'
+build_requires:
+  Test::More: 0
+distribution_type: module
+generated_by: 'Module::Install version 0.77'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Catalyst-View-Tenjin
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  Catalyst: 5.7
+  MRO::Compat: 0
+  Tenjin: 0.03
+  Data::Dump: 0
+  perl: 5.8.1
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
