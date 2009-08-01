@@ -18,7 +18,7 @@ no_index:
 requires:
   Catalyst: 5.7
   MRO::Compat: 0
-  Tenjin: 0.03
+  Tenjin: 0.04
   Data::Dump: 0
   perl: 5.8.1
 resources:

@@ -10,7 +10,7 @@ name 'Catalyst-View-Tenjin';
 all_from 'lib/Catalyst/View/Tenjin.pm';
 
 requires 'Catalyst' => 5.7;
-requires 'Tenjin' => '0.03';
+requires 'Tenjin' => '0.04';
 requires 'Data::Dump' => 0;
 requires 'MRO::Compat' => 0;
 
