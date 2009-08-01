@@ -6,7 +6,7 @@ use Data::Dump 'dump';
 use Tenjin;
 use MRO::Compat;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub _coerce_paths {
 	my ($paths, $dlim) = shift;
@@ -47,13 +47,16 @@ sub new {
 		$c, { %$config }, 
 	);
 	
-	#$self->config($config); # <- UNCOMMENT FOR NEXT VERSION
+	$self->config($config);
 
 	if ($config->{USE_STRICT}) {
 		$Tenjin::USE_STRICT = 1;
 	}
+	if ($config->{ENCODING}) {
+		$Tenjin::ENCODING = $config->{ENCODING};
+	}
 	
-	$self->{template} = Tenjin::Engine->new({ path => $config->{INCLUDE_PATH} });
+	$self->{template} = Tenjin::Engine->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
 
 	return $self;
 }
@@ -151,6 +154,7 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 		USE_STRICT => 1,
 		INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 		TEMPLATE_EXTENSION => '.html',
+		ENCODING => 'utf8',
 	);
 
 	1;
@@ -189,7 +193,7 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 =head1 DESCRIPTION
 
 This is the Catalyst view class for the L<Tenjin>.
-Your application should defined a view class which is a subclass of
+Your application should define a view class which is a subclass of
 this module. There is no helper script to create this class automatically,
 but you can do so easily as described in the synopsis.
 
@@ -219,6 +223,7 @@ in the view subclass. This happens when the module is first loaded.
 		USE_STRICT => 1,
 		INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 		TEMPLATE_EXTENSION => '.html',
+		ENCODING => 'utf8',
 	);
  
 You can also define a class item in your main application configuration,
@@ -240,8 +245,21 @@ method in a subclass).
 			USE_STRICT => 1,
 			INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 			TEMPLATE_EXTENSION => '.html',
+			ENCODING => 'utf8',
         },
     });
+
+The C<USE_STRICT> configuration option determines if Tenjin will C<use strict>
+when evaluating the embedded Perl code inside your templates. If C<USE_STRICT>
+is set to a true value (1), L<strict> will be used. This is recommended, but if
+you're having trouble using C<strict>, you can set it to 0, or just not set it at
+all (by default, Tenjin will not C<use strict> on embedded Perl code).
+
+The C<ENCODING> configuration option tells Tenjin that how your template files are
+encoded. By default, Tenjin will try to decode your templates as utf8.
+
+If you set C<TEMPLATE_EXTENSION>, this extension will be automatically appended
+to C<<$c->stash->{template}>> before being searched in the C<INCLUDE_PATH>.
 
 =head2 DYNAMIC INCLUDE_PATH
 
@@ -306,8 +324,7 @@ A number of other template variables are also added:
 
 These can be accessed from the template in the usual way:
 
-<message.html>:
-
+	# message.html
     The message is: [== $message =]
     The base is [== $base =]
     The name is [== $name =]
@@ -334,7 +351,7 @@ your application, and use them on the fly. For example:
 
 If you wish to use the output of a template for some other purpose than
 displaying in the response, you can use the L<render> method. For example,
-use can use it was L<Catalyst::Plugin::Email>:
+use can use it with L<Catalyst::Plugin::Email>:
 
 	sub send_email : Local {
 		my ($self, $c) = @_;
@@ -352,17 +369,17 @@ use can use it was L<Catalyst::Plugin::Email>:
 		# Redirect or display a message
 	}
 
-=head2 METHODS
+=head1 METHODS
 
 =head2 new
 
-The constructor for the Tenjin view. Sets up the template provider, 
-and reads the application config.
+The constructor for the Tenjin view.
 
 =head2 process
 
 Renders the template specified in C<< $c->stash->{template} >> or
-C<< $c->action >> (the private name of the matched action. Calls L<render> to
+C<< $c->action >> (the private name of the matched action, with the default extension
+specified by the C<TEMPLATE_EXTENSION> configuration item. Calls L<render> to
 perform actual rendering. Output is stored in C<< $c->response->body >>.
 
 =head2 render($c, $template, \%args)
@@ -372,21 +389,22 @@ if an error was encountered.
 
 C<$template> is the name of the template you wish to render. If this template
 was not registered with the view yet, it will be searched for in the directories
-set in the INCLUDE_PATH option.
+set in the C<INCLUDE_PATH> configuration item.
 
 The template variables are set to C<%$args> if $args is a hashref, or 
-$C<< $c->stash >> otherwise. In either case the variables are augmented with 
-C<base> set to C< << $c->req->base >>, C<c> to C<$c> and C<name> to
-C<< $c->config->{name} >>. Alternately, the C<CATALYST_VAR> configuration item
-can be defined to specify the name of a template variable through which the
-context reference (C<$c>) can be accessed. In this case, the C<c>, C<base> and
-C<name> variables are omitted.
+C<< %{$c->stash} >> otherwise. In either case the variables are augmented with 
+C<$base> set to C<< $c->req->base >>, C<$name> to
+C<< $c->config->{name} >> and the Catalyst context, which will be set to C<$c>
+unless the C<CATALYST_VAR> configuration item is set to a different name. If so,
+the C<$c>, C<$base> and C<$name> variables are omitted.
 
 =head2 register($tmpl_name, $tmpl_content)
 
 Registers a template with the view from an arbitrary source, for immediate
 usage in the application. C<$tmpl_name> is the name of the template, used
 to distinguish it from others. C<$tmpl_content> is the body of the template.
+Templates are registered in memory, so don't expect them to remain registered
+between application restarts.
 
 =head2 check_tmpl($template_name)
 
