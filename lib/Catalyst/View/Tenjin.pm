@@ -1,34 +1,26 @@
 package Catalyst::View::Tenjin;
 
-use strict;
-use base qw/Catalyst::View/;
+use Moose;
+use namespace::autoclean;
 use Data::Dump 'dump';
 use Tenjin;
 use MRO::Compat;
 
-our $VERSION = '0.02';
+extends 'Catalyst::View';
 
-sub _coerce_paths {
-	my ($paths, $dlim) = shift;
-	return () if ( !$paths );
-	return @{$paths} if ( ref $paths eq 'ARRAY' );
+our $VERSION = '0.03';
 
-	# tweak delim to ignore C:/
-	unless ( defined $dlim ) {
-		$dlim = ( $^O eq 'MSWin32' ) ? ':(?!\\/)' : ':';
-	}
-	return split( /$dlim/, $paths );
-}
+sub COMPONENT {
+	my ($class, $c, $arguments) = @_;
 
-sub new {
-	my ( $class, $c, $arguments ) = @_;
 	my $config = {
 		EVAL_PERL          => 0,
 		TEMPLATE_EXTENSION => '',
 		%{ $class->config },
 		%{$arguments},
 	};
-	if ( ! (ref $config->{INCLUDE_PATH} eq 'ARRAY') ) {
+
+	unless (ref $config->{INCLUDE_PATH} eq 'ARRAY') {
 		my $delim = $config->{DELIMITER};
 		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $delim );
 		if ( !@include_path ) {
@@ -39,13 +31,11 @@ sub new {
 		$config->{INCLUDE_PATH} = \@include_path;
 	}
 
-	if ( $c->debug && $config->{DUMP_CONFIG} ) {
+	if ($c->debug && $config->{DUMP_CONFIG}) {
 		$c->log->debug( "Tenjin Config: ", dump($config) );
 	}
 
-	my $self = $class->next::method(
-		$c, { %$config }, 
-	);
+	my $self = $class->new($c, { %$config });
 	
 	$self->config($config);
 
@@ -56,10 +46,10 @@ sub new {
 		$Tenjin::ENCODING = $config->{ENCODING};
 	}
 	
-	$self->{template} = Tenjin::Engine->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
+	$self->{template} = Tenjin->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
 
 	return $self;
-}
+};
 
 sub process {
 	my ($self, $c) = @_;
@@ -130,7 +120,20 @@ sub template_vars {
 	)
 }
 
-__PACKAGE__;
+sub _coerce_paths {
+	my ($paths, $dlim) = shift;
+	return () if ( !$paths );
+	return @{$paths} if ( ref $paths eq 'ARRAY' );
+
+	# tweak delim to ignore C:/
+	unless ( defined $dlim ) {
+		$dlim = ( $^O eq 'MSWin32' ) ? ':(?!\\/)' : ':';
+	}
+	return split( /$dlim/, $paths );
+}
+
+no Moose;
+__PACKAGE__->meta->make_immutable();
 
 __END__
 
