@@ -82,7 +82,6 @@ sub register {
 	my ($self, $tmpl_name, $tmpl_content) = @_;
 
 	my $template = Tenjin::Template->new(undef, $self->{template}->{init_opts_for_template});
-	$template->{timestamp} = time();
 	$template->convert($tmpl_content);
 	$template->compile();
 
