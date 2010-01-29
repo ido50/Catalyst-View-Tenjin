@@ -86,9 +86,9 @@ sub register {
 	$template->compile();
 
 	use Data::Dumper;
-	print STDERR "\n==================\n", Dumper($template), "\n==================\n";
 
 	$self->{template}->register_template($tmpl_name, $template);
+	print STDERR "\n==================\n", Dumper($self->{template}->{templates}->{$tmpl_name}), "\n==================\n";
 }
 
 sub render {
