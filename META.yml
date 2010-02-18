@@ -1,7 +1,7 @@
 ---
 abstract: 'Tenjin view class for Catalyst.'
 author:
-  - 'Ido Perelmutter <ido50@yahoo.com>'
+  - 'Ido Perelmutter <ido@ido50.net>'
 build_requires:
   Test::More: 0
 distribution_type: module

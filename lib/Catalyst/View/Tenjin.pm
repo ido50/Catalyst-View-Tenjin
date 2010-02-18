@@ -14,7 +14,6 @@ sub COMPONENT {
 	my ($class, $c, $arguments) = @_;
 
 	my $config = {
-		EVAL_PERL          => 0,
 		TEMPLATE_EXTENSION => '',
 		%{ $class->config },
 		%{$arguments},
@@ -160,7 +159,7 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 	);
 
 	1;
-         
+	 
 	# render view from lib/MyApp.pm or lib/MyApp::C::SomeController.pm
 
 	sub message : Global {
@@ -173,17 +172,17 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
 	# access variables from template
 
-    The message is: [== $message =].
-    
-    # example when CATALYST_VAR is set to 'Catalyst'
-    Context is [== $Catalyst =]          
-    The base is [== $Catalyst->req->base =] 
-    The name is [== $Catalyst->config->name =] 
-    
-    # example when CATALYST_VAR isn't set
-    Context is [== $c =]
-    The base is [== $base =]
-    The name is [== $name =]
+	The message is: [== $message =].
+
+	# example when CATALYST_VAR is set to 'Catalyst'
+	Context is [== $Catalyst =]          
+	The base is [== $Catalyst->req->base =] 
+	The name is [== $Catalyst->config->name =] 
+
+	# example when CATALYST_VAR isn't set
+	Context is [== $c =]
+	The base is [== $base =]
+	The name is [== $name =]
 
 	# you can also embed Perl
 	<?pl if ($c->action->namespace eq 'admin') { ?>
@@ -194,34 +193,39 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
 =head1 DESCRIPTION
 
-This is the Catalyst view class for the L<Tenjin>.
+This is the Catalyst view class for the L<Tenjin> template engine.
+
 Your application should define a view class which is a subclass of
 this module. There is no helper script to create this class automatically,
 but you can do so easily as described in the synopsis.
 
-Now you can modify your action handlers in the main application and/or
-controllers to forward to your view class. You might choose to do this
-in the end() method, for example, to automatically forward all actions
-to the Tenjin view class.
+Once you've created the view class, you can modify your action handlers
+in the main application and/or controllers to forward to your view class.
+You might choose to do this in the end() method, for example,
+to automatically forward all actions to the Tenjin view class.
 
-    # In MyApp or MyApp::Controller::SomeController
-    
-    sub end : Private {
-        my( $self, $c ) = @_;
-        $c->forward('MyApp::View::Tenjin');
-    }
+	# In MyApp or MyApp::Controller::SomeController
+
+	sub end : Private {
+		my( $self, $c ) = @_;
+		$c->forward('MyApp::View::Tenjin');
+	}
+
+This module is now L<Moose>-based, so you can use method modifiers. For
+example, you can perform some operation after or before this module begins
+processing the request or rendering the template.
 
 =head2 CONFIGURATION
 
 To configure your view class, you can call the C<config()> method
 in the view subclass. This happens when the module is first loaded.
 
-    package MyApp::View::Tenjin;
-    
-    use strict;
-    use base 'Catalyst::View::Tenjin';
+	package MyApp::View::Tenjin;
 
-    __PACKAGE__->config(
+	use strict;
+	use base 'Catalyst::View::Tenjin';
+
+	__PACKAGE__->config(
 		USE_STRICT => 1,
 		INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 		TEMPLATE_EXTENSION => '.html',
@@ -235,21 +239,21 @@ happens in the base class new() method (which is one reason why you must
 remember to call it via C<MRO::Compat> if you redefine the C<new()> 
 method in a subclass).
 
-    package MyApp;
-    
-    use strict;
-    use Catalyst;
-    
-    MyApp->config({
-        name     => 'MyApp',
-        root     => MyApp->path_to('root'),
-        'View::Tenjin' => {
+	package MyApp;
+
+	use strict;
+	use Catalyst;
+
+	MyApp->config({
+		name     => 'MyApp',
+		root     => MyApp->path_to('root'),
+		'View::Tenjin' => {
 			USE_STRICT => 1,
 			INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 			TEMPLATE_EXTENSION => '.html',
 			ENCODING => 'utf8',
-        },
-    });
+		},
+	});
 
 The C<USE_STRICT> configuration option determines if Tenjin will C<use strict>
 when evaluating the embedded Perl code inside your templates. If C<USE_STRICT>
@@ -270,13 +274,13 @@ Sometimes it is desirable to modify INCLUDE_PATH for your templates at run time.
 Additional paths can be added to the start of INCLUDE_PATH via the stash as
 follows:
 
-    $c->stash->{additional_template_paths} =
-        [$c->config->{root} . '/test_include_path'];
+	$c->stash->{additional_template_paths} =
+		[$c->config->{root} . '/test_include_path'];
 
 If you need to add paths to the end of INCLUDE_PATH, there is also an
 include_path() accessor available:
 
-    push( @{ $c->view('Tenjin')->include_path }, qw/path/ );
+	push( @{ $c->view('Tenjin')->include_path }, qw/path/ );
 
 Note that if you use include_path() to add extra paths to INCLUDE_PATH, you
 MUST check for duplicate paths. Without such checking, the above code will add
@@ -286,7 +290,7 @@ A safer approach is to use include_path() to overwrite the array of paths
 rather than adding to it. This eliminates both the need to perform duplicate
 checking and the chance of a memory leak:
 
-    @{ $c->view('Tenjin')->include_path } = qw/path another_path/;
+	@{ $c->view('Tenjin')->include_path } = qw/path another_path/;
 
 If you are calling C<render> directly then you can specify dynamic paths by 
 having a C<additional_template_paths> key with a value of additonal directories
@@ -297,11 +301,12 @@ to search. See L<CAPTURING TEMPLATE OUTPUT> for an example showing this.
 The view plugin renders the template specified in the C<template>
 item in the stash.  
 
-    sub message : Global {
-        my ( $self, $c ) = @_;
-        $c->stash->{template} = 'message.html';
-        $c->forward('MyApp::View::Tenjin');
-    }
+	sub message : Global {
+		my ($self, $c) = @_;
+
+		$c->stash->{template} = 'message.html';
+		$c->forward('MyApp::View::Tenjin');
+	}
 
 If a stash item isn't defined, then it instead uses the
 stringification of the action dispatched to (as defined by $c->action)
@@ -311,25 +316,26 @@ is to append '.html', it would load C<root/message.html>.
 The items defined in the stash are passed to Tenjin for use as
 template variables.
 
-    sub default : Private {
-        my ( $self, $c ) = @_;
-        $c->stash->{template} = 'message.html';
-        $c->stash->{message}  = 'Hello World!';
-        $c->forward('MyApp::View::Tenjin');
-    }
+	sub default : Private {
+		my ($self, $c) = @_;
+
+		$c->stash->{template} = 'message.html';
+		$c->stash->{message}  = 'Hello World!';
+		$c->forward('MyApp::View::Tenjin');
+	}
 
 A number of other template variables are also added:
 
-    $c      A reference to the context object, $c
-    $base   The URL base, from $c->req->base()
-    $name   The application name, from $c->config->{name}
+	$c      A reference to the context object, $c
+	$base   The URL base, from $c->req->base()
+	$name   The application name, from $c->config->{name}
 
 These can be accessed from the template in the usual way:
 
 	# message.html
-    The message is: [== $message =]
-    The base is [== $base =]
-    The name is [== $name =]
+	The message is: [== $message =]
+	The base is [== $base =]
+	The name is [== $name =]
 
 The output generated by the template is stored in C<< $c->response->body >>.
 
@@ -377,14 +383,14 @@ use can use it with L<Catalyst::Plugin::Email>:
 
 The constructor for the Tenjin view.
 
-=head2 process
+=head2 process()
 
 Renders the template specified in C<< $c->stash->{template} >> or
 C<< $c->action >> (the private name of the matched action, with the default extension
 specified by the C<TEMPLATE_EXTENSION> configuration item. Calls L<render> to
 perform actual rendering. Output is stored in C<< $c->response->body >>.
 
-=head2 render($c, $template, \%args)
+=head2 render( $c, $template, \%args )
 
 Renders the given template and returns output, or throws an exception
 if an error was encountered.
@@ -400,7 +406,7 @@ C<< $c->config->{name} >> and the Catalyst context, which will be set to C<$c>
 unless the C<CATALYST_VAR> configuration item is set to a different name. If so,
 the C<$c>, C<$base> and C<$name> variables are omitted.
 
-=head2 register($tmpl_name, $tmpl_content)
+=head2 register( $tmpl_name, $tmpl_content )
 
 Registers a template with the view from an arbitrary source, for immediate
 usage in the application. C<$tmpl_name> is the name of the template, used
@@ -408,15 +414,68 @@ to distinguish it from others. C<$tmpl_content> is the body of the template.
 Templates are registered in memory, so don't expect them to remain registered
 between application restarts.
 
-=head2 check_tmpl($template_name)
+=head2 check_tmpl( $template_name )
 
 Checks if a template named C<$template_name> was already registered with
 the view. Returns 1 if yes, C<undef> if no.
 
-=head2 template_vars
+=head2 template_vars()
 
 Returns a list of keys/values to be used as the catalyst variables in the
 template.
+
+=head1 CHANGES
+
+=over
+
+=item * Updated for compatibility with the new and revised L<Tenjin> version.
+
+=item * This module is now based on Moose.
+
+=back
+
+=head1 TODO
+
+=over
+
+=item * Create appropriate tests.
+
+=back
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C<bug-tenjin at rt.cpan.org>,
+or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Catalyst-View-Tenjin>.
+I will be notified, and then you'll automatically be notified of progress
+on your bug as I make changes.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Catalyst::View::Tenjin
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Catalyst-View-Tenjin>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Catalyst-View-Tenjin>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Catalyst-View-Tenjin>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Catalyst-View-Tenjin/>
+
+=back
 
 =head1 SEE ALSO
 
@@ -424,13 +483,13 @@ L<Tenjin>, L<Catalyst>, L<Catalyst::View::TT>
 
 =head1 AUTHOR
 
-Ido Perelmutter E<lt>ido50@yahoo.comE<gt>. This module was adapted from
+Ido Perlmuter E<lt>ido@ido50.netE<gt>. This module was adapted from
 L<Catalyst::View::TT>, so most of the code and even the documentation
 belongs to the authors of L<Catalyst::View::TT>.
 
-=head1 COPYRIGHT & LICENSE
+=head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2009 the aforementioned authors.
+Copyright (c) 2009-2010 the aforementioned authors.
 
 This program is free software, you can redistribute it and/or modify it 
 under the same terms as Perl itself.
