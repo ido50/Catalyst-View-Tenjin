@@ -1,20 +1,23 @@
-use inc::Module::Install 0.77;
+use strict;
+use warnings;
+use ExtUtils::MakeMaker;
 
-if ( -e 'MANIFEST.SKIP' ) {
-    system( 'pod2text lib/Catalyst/View/Tenjin.pm > README' );
-}
-
-perl_version '5.008';
-
-name 'Catalyst-View-Tenjin';
-all_from 'lib/Catalyst/View/Tenjin.pm';
-
-requires 'Catalyst' => 5.7;
-requires 'Tenjin' => '0.05';
-requires 'Data::Dump' => 0;
-requires 'MRO::Compat' => 0;
-
-test_requires 'Test::More';
-
-auto_install;
-WriteAll;
+WriteMakefile(
+    NAME                => 'Catalyst::View::Tenjin',
+    AUTHOR              => q{Ido Perlmuter <ido@ido50.net>},
+    VERSION_FROM        => 'lib/Catalyst/View/Tenjin.pm',
+    ABSTRACT_FROM       => 'lib/Catalyst/View/Tenjin.pm',
+    ($ExtUtils::MakeMaker::VERSION >= 6.3002
+      ? ('LICENSE'=> 'perl')
+      : ()),
+    PL_FILES            => {},
+    PREREQ_PM		=> {
+        'Test::More'		=> 0,
+        'Catalyst'		=> 5.7,
+        'Tenjin'		=> 0.061,
+        'Data::Dump'		=> 0,
+        'MRO::Compat'		=> 0,
+    },
+    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean               => { FILES => 'Catalyst-View-Tenjin-*' },
+);

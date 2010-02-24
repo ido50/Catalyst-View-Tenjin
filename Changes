@@ -1,5 +1,9 @@
 Revision history for Perl extension Catalyst::View::Tenjin
 
+0.04	to be released
+	- Moved to ExtUtils::MakeMaker
+	- Cleaned distro files, added MANIFEST.SKIP and new basic tests
+
 0.03	2010-02-18 12:35:00
 	- Updated for compatibility with the new Tenjin 0.05
 	- Not backwards compatible with pre-0.05 versions of Tenjin

@@ -487,6 +487,8 @@ Ido Perlmuter E<lt>ido@ido50.netE<gt>. This module was adapted from
 L<Catalyst::View::TT>, so most of the code and even the documentation
 belongs to the authors of L<Catalyst::View::TT>.
 
+Development of this module is done with github at L<http://github.com/ido50/Catalyst--View--Tenjin>.
+
 =head1 LICENSE AND COPYRIGHT
 
 Copyright (c) 2009-2010 the aforementioned authors.
