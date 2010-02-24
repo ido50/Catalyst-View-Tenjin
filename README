@@ -1,23 +1,20 @@
 NAME
     Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
+VERSION
+    0.04
+
 SYNOPSIS
             # create your view
-            package MyApp::View::Tenjin;
-
-            use strict;
-            use base 'Catalyst::View::Tenjin';
-
-            # set configuration, here or in your app's config file,
-            # if you don't want to use strict you don't have to.
+            script/myapp_create.pl view Tenjin Tenjin
+        
+            # check your new view's configuration
             __PACKAGE__->config(
                     USE_STRICT => 1,
                     INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
                     TEMPLATE_EXTENSION => '.html',
                     ENCODING => 'utf8',
             );
-
-            1;
          
             # render view from lib/MyApp.pm or lib/MyApp::C::SomeController.pm
 
@@ -71,6 +68,50 @@ DESCRIPTION
     example, you can perform some operation after or before this module
     begins processing the request or rendering the template.
 
+METHODS
+  COMPONENT( $c, $arguments )
+    This method is automatically called by Catalyst when creating the view.
+    The method creates an instance of Tenjin using the configuration options
+    set in the view.
+
+  process()
+    Renders the template specified in "$c->stash->{template}" or
+    "$c->action" (the private name of the matched action, with the default
+    extension specified by the "TEMPLATE_EXTENSION" configuration item.
+    Calls render to perform actual rendering. Output is stored in
+    "$c->response->body".
+
+  check_tmpl( $template_name )
+    Checks if a template named $template_name was already registered with
+    the view. Returns 1 if yes, "undef" if no.
+
+  register( $tmpl_name, $tmpl_content )
+    Registers a template with the view from an arbitrary source, for
+    immediate usage in the application. $tmpl_name is the name of the
+    template, used to distinguish it from others. $tmpl_content is the body
+    of the template. Templates are registered in memory, so don't expect
+    them to remain registered between application restarts.
+
+  render( $c, $template, \%args )
+    Renders the given template and returns output, or throws an exception if
+    an error was encountered.
+
+    $template is the name of the template you wish to render. If this
+    template was not registered with the view yet, it will be searched for
+    in the directories set in the "INCLUDE_PATH" configuration item.
+
+    The template variables are set to %$args if $args is a hashref, or
+    "%{$c->stash}" otherwise. In either case the variables are augmented
+    with $base set to "$c->req->base", $name to "$c->config->{name}" and the
+    Catalyst context, which will be set to $c unless the "CATALYST_VAR"
+    configuration item is set to a different name. If so, the $c, $base and
+    $name variables are omitted.
+
+  template_vars( $c )
+    Returns a list of key-value pairs to be used as the context variables
+    (i.e. the context object) in the Tenjin templates.
+
+  _coerce_paths( $dlim )
   CONFIGURATION
     To configure your view class, you can call the "config()" method in the
     view subclass. This happens when the module is first loaded.
@@ -234,51 +275,14 @@ DESCRIPTION
                     # Redirect or display a message
             }
 
-METHODS
-  new
-    The constructor for the Tenjin view.
-
-  process()
-    Renders the template specified in "$c->stash->{template}" or
-    "$c->action" (the private name of the matched action, with the default
-    extension specified by the "TEMPLATE_EXTENSION" configuration item.
-    Calls render to perform actual rendering. Output is stored in
-    "$c->response->body".
-
-  render( $c, $template, \%args )
-    Renders the given template and returns output, or throws an exception if
-    an error was encountered.
-
-    $template is the name of the template you wish to render. If this
-    template was not registered with the view yet, it will be searched for
-    in the directories set in the "INCLUDE_PATH" configuration item.
-
-    The template variables are set to %$args if $args is a hashref, or
-    "%{$c->stash}" otherwise. In either case the variables are augmented
-    with $base set to "$c->req->base", $name to "$c->config->{name}" and the
-    Catalyst context, which will be set to $c unless the "CATALYST_VAR"
-    configuration item is set to a different name. If so, the $c, $base and
-    $name variables are omitted.
-
-  register( $tmpl_name, $tmpl_content )
-    Registers a template with the view from an arbitrary source, for
-    immediate usage in the application. $tmpl_name is the name of the
-    template, used to distinguish it from others. $tmpl_content is the body
-    of the template. Templates are registered in memory, so don't expect
-    them to remain registered between application restarts.
-
-  check_tmpl( $template_name )
-    Checks if a template named $template_name was already registered with
-    the view. Returns 1 if yes, "undef" if no.
-
-  template_vars()
-    Returns a list of keys/values to be used as the catalyst variables in
-    the template.
-
 CHANGES
-    *   Updated for compatibility with the new and revised Tenjin version.
+    *   0.04: Created a helper module so views can be created with
+        myapp_create.pl
 
-    *   This module is now based on Moose.
+    *   0.03: Updated for compatibility with the new and revised Tenjin
+        version.
+
+    *   0.03: This module is now based on Moose.
 
 TODO
     *   Create appropriate tests.
@@ -320,6 +324,9 @@ AUTHOR
     Ido Perlmuter <ido@ido50.net>. This module was adapted from
     Catalyst::View::TT, so most of the code and even the documentation
     belongs to the authors of Catalyst::View::TT.
+
+    Development of this module is done with github at
+    <http://github.com/ido50/Catalyst-View-Tenjin>.
 
 LICENSE AND COPYRIGHT
     Copyright (c) 2009-2010 the aforementioned authors.
