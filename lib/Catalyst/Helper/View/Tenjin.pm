@@ -9,7 +9,7 @@ Catalyst::Helper::View::Tenjin - Helper for creating Tenjin Views
 
 =head1 SYNOPSIS
 
-	script/create.pl view Tenjin Tenjin
+	script/myapp_create.pl view Tenjin Tenjin
 
 =head1 DESCRIPTION
 
@@ -53,10 +53,10 @@ __DATA__
 __compclass__
 package [% class %];
 
-use strict;
-use warnings;
+use Moose;
+use namespace::autoclean;
 
-use base 'Catalyst::View::Tenjin';
+extends 'Catalyst::View::Tenjin';
 
 __PACKAGE__->config(
 	#USE_STRICT => 1,
@@ -88,4 +88,5 @@ it under the same terms as Perl itself.
 
 =cut
 
-1;
+no Moose;
+__PACKAGE__->meta->make_immutable();

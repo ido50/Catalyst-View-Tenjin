@@ -8,7 +8,7 @@ use MRO::Compat;
 
 extends 'Catalyst::View';
 
-our $VERSION = '0.04';
+our $VERSION = '0.041';
 
 =head1 NAME
 
@@ -16,7 +16,7 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
 =head1 VERSION
 
-0.04
+0.041
 
 =head1 SYNOPSIS
 

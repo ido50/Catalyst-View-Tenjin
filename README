@@ -2,7 +2,7 @@ NAME
     Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
 VERSION
-    0.04
+    0.041
 
 SYNOPSIS
             # create your view

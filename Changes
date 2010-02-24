@@ -1,5 +1,8 @@
 Revision history for Perl extension Catalyst::View::Tenjin
 
+0.041	2010-02-25 00:35:00
+	- Helper module creates a Moose-based view
+
 0.04	2010-02-24 19:00:00
 	- Created a helper module so views can be created with myapp_create.pl
 	- Moved to ExtUtils::MakeMaker for the Makefile
