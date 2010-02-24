@@ -1,7 +1,8 @@
 Revision history for Perl extension Catalyst::View::Tenjin
 
-0.04	to be released
-	- Moved to ExtUtils::MakeMaker
+0.04	2010-02-24 19:00:00
+	- Created a helper module so views can be created with myapp_create.pl
+	- Moved to ExtUtils::MakeMaker for the Makefile
 	- Cleaned distro files, added MANIFEST.SKIP and new basic tests
 
 0.03	2010-02-18 12:35:00

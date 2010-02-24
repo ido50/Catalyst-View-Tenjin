@@ -8,157 +8,28 @@ use MRO::Compat;
 
 extends 'Catalyst::View';
 
-our $VERSION = '0.03';
-
-sub COMPONENT {
-	my ($class, $c, $arguments) = @_;
-
-	my $config = {
-		TEMPLATE_EXTENSION => '',
-		%{ $class->config },
-		%{$arguments},
-	};
-
-	unless (ref $config->{INCLUDE_PATH} eq 'ARRAY') {
-		my $delim = $config->{DELIMITER};
-		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $delim );
-		if ( !@include_path ) {
-			my $root = $c->config->{root};
-			my $base = Path::Class::dir( $root, 'base' );
-			@include_path = ( "$root", "$base" );
-		}
-		$config->{INCLUDE_PATH} = \@include_path;
-	}
-
-	if ($c->debug && $config->{DUMP_CONFIG}) {
-		$c->log->debug( "Tenjin Config: ", dump($config) );
-	}
-
-	my $self = $class->new($c, { %$config });
-	
-	$self->config($config);
-
-	if ($config->{USE_STRICT}) {
-		$Tenjin::USE_STRICT = 1;
-	}
-	if ($config->{ENCODING}) {
-		$Tenjin::ENCODING = $config->{ENCODING};
-	}
-	
-	$self->{template} = Tenjin->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
-
-	return $self;
-};
-
-sub process {
-	my ($self, $c) = @_;
-
-	my $template = $c->stash->{template} || $c->action . $self->config->{TEMPLATE_EXTENSION};
-
-	unless (defined $template) {
-		$c->log->debug('No template specified for rendering') if $c->debug;
-		return 0;
-	}
-
-	my $output = $self->render($c, $template);
-
-	unless ($c->response->content_type) {
-		$c->response->content_type('text/html; charset=utf-8');
-	}
-
-	$c->response->body($output);
-
-	return 1;
-}
-
-sub check_tmpl {
-	my ($self, $name) = @_;
-
-	return exists $self->{template}->{templates}->{$name} ? 1 : undef;
-}
-
-sub register {
-	my ($self, $tmpl_name, $tmpl_content) = @_;
-
-	my $template = Tenjin::Template->new(undef, $self->{template}->{init_opts_for_template});
-	$template->convert($tmpl_content);
-	$template->compile();
-
-	$self->{template}->register_template($tmpl_name, $template);
-}
-
-sub render {
-	my ($self, $c, $tmpl_name, $args) = @_;
-
-	$c->log->debug(qq/Rendering template "$tmpl_name"/) if $c->debug;
-
-	my $vars = {
-		(ref $args eq 'HASH' ? %$args : %{ $c->stash() }),
-		$self->template_vars($c)
-	};
-
-	local $self->{include_path} = 
-		[ @{ $vars->{additional_template_paths} }, @{ $self->{include_path} } ]
-		if ref $vars->{additional_template_paths};
-
-	return $self->{template}->render($tmpl_name, $vars);
-}
-
-sub template_vars {
-	my ($self, $c) = @_;
-
-	my $cvar = $self->config->{CATALYST_VAR};
-
-	defined $cvar
-	? ( $cvar => $c )
-	: (
-		c    => $c,
-		base => $c->req->base,
-		name => $c->config->{name}
-	)
-}
-
-sub _coerce_paths {
-	my ($paths, $dlim) = shift;
-	return () if ( !$paths );
-	return @{$paths} if ( ref $paths eq 'ARRAY' );
-
-	# tweak delim to ignore C:/
-	unless ( defined $dlim ) {
-		$dlim = ( $^O eq 'MSWin32' ) ? ':(?!\\/)' : ':';
-	}
-	return split( /$dlim/, $paths );
-}
-
-no Moose;
-__PACKAGE__->meta->make_immutable();
-
-__END__
-
-=pod
+our $VERSION = '0.04';
 
 =head1 NAME
 
 Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
+=head1 VERSION
+
+0.04
+
 =head1 SYNOPSIS
 
 	# create your view
-	package MyApp::View::Tenjin;
-
-	use strict;
-	use base 'Catalyst::View::Tenjin';
-
-	# set configuration, here or in your app's config file,
-	# if you don't want to use strict you don't have to.
+	script/myapp_create.pl view Tenjin Tenjin
+	
+	# check your new view's configuration
 	__PACKAGE__->config(
 		USE_STRICT => 1,
 		INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 		TEMPLATE_EXTENSION => '.html',
 		ENCODING => 'utf8',
 	);
-
-	1;
 	 
 	# render view from lib/MyApp.pm or lib/MyApp::C::SomeController.pm
 
@@ -214,6 +85,196 @@ to automatically forward all actions to the Tenjin view class.
 This module is now L<Moose>-based, so you can use method modifiers. For
 example, you can perform some operation after or before this module begins
 processing the request or rendering the template.
+
+=head1 METHODS
+
+=head2 COMPONENT( $c, $arguments )
+
+This method is automatically called by Catalyst when creating the view.
+The method creates an instance of Tenjin using the configuration options
+set in the view.
+
+=cut
+
+sub COMPONENT {
+	my ($class, $c, $arguments) = @_;
+
+	my $config = {
+		TEMPLATE_EXTENSION => '',
+		%{ $class->config },
+		%{$arguments},
+	};
+
+	unless (ref $config->{INCLUDE_PATH} eq 'ARRAY') {
+		my $delim = $config->{DELIMITER};
+		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $delim );
+		if ( !@include_path ) {
+			my $root = $c->config->{root};
+			my $base = Path::Class::dir( $root, 'base' );
+			@include_path = ( "$root", "$base" );
+		}
+		$config->{INCLUDE_PATH} = \@include_path;
+	}
+
+	if ($c->debug && $config->{DUMP_CONFIG}) {
+		$c->log->debug( "Tenjin Config: ", dump($config) );
+	}
+
+	my $self = $class->new($c, { %$config });
+	
+	$self->config($config);
+
+	if ($config->{USE_STRICT}) {
+		$Tenjin::USE_STRICT = 1;
+	}
+	if ($config->{ENCODING}) {
+		$Tenjin::ENCODING = $config->{ENCODING};
+	}
+	
+	$self->{template} = Tenjin->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
+
+	return $self;
+};
+
+=head2 process()
+
+Renders the template specified in C<< $c->stash->{template} >> or
+C<< $c->action >> (the private name of the matched action, with the default extension
+specified by the C<TEMPLATE_EXTENSION> configuration item. Calls L<render> to
+perform actual rendering. Output is stored in C<< $c->response->body >>.
+
+=cut
+
+sub process {
+	my ($self, $c) = @_;
+
+	my $template = $c->stash->{template} || $c->action . $self->config->{TEMPLATE_EXTENSION};
+
+	unless (defined $template) {
+		$c->log->debug('No template specified for rendering') if $c->debug;
+		return 0;
+	}
+
+	my $output = $self->render($c, $template);
+
+	unless ($c->response->content_type) {
+		$c->response->content_type('text/html; charset=utf-8');
+	}
+
+	$c->response->body($output);
+
+	return 1;
+}
+
+=head2 check_tmpl( $template_name )
+
+Checks if a template named C<$template_name> was already registered with
+the view. Returns 1 if yes, C<undef> if no.
+
+=cut
+
+sub check_tmpl {
+	my ($self, $name) = @_;
+
+	return exists $self->{template}->{templates}->{$name} ? 1 : undef;
+}
+
+=head2 register( $tmpl_name, $tmpl_content )
+
+Registers a template with the view from an arbitrary source, for immediate
+usage in the application. C<$tmpl_name> is the name of the template, used
+to distinguish it from others. C<$tmpl_content> is the body of the template.
+Templates are registered in memory, so don't expect them to remain registered
+between application restarts.
+
+=cut
+
+sub register {
+	my ($self, $tmpl_name, $tmpl_content) = @_;
+
+	my $template = Tenjin::Template->new(undef, $self->{template}->{init_opts_for_template});
+	$template->convert($tmpl_content);
+	$template->compile();
+
+	$self->{template}->register_template($tmpl_name, $template);
+}
+
+=head2 render( $c, $template, \%args )
+
+Renders the given template and returns output, or throws an exception
+if an error was encountered.
+
+C<$template> is the name of the template you wish to render. If this template
+was not registered with the view yet, it will be searched for in the directories
+set in the C<INCLUDE_PATH> configuration item.
+
+The template variables are set to C<%$args> if $args is a hashref, or 
+C<< %{$c->stash} >> otherwise. In either case the variables are augmented with 
+C<$base> set to C<< $c->req->base >>, C<$name> to
+C<< $c->config->{name} >> and the Catalyst context, which will be set to C<$c>
+unless the C<CATALYST_VAR> configuration item is set to a different name. If so,
+the C<$c>, C<$base> and C<$name> variables are omitted.
+
+=cut
+
+sub render {
+	my ($self, $c, $tmpl_name, $args) = @_;
+
+	$c->log->debug(qq/Rendering template "$tmpl_name"/) if $c->debug;
+
+	my $vars = {
+		(ref $args eq 'HASH' ? %$args : %{ $c->stash() }),
+		$self->template_vars($c)
+	};
+
+	local $self->{include_path} = 
+		[ @{ $vars->{additional_template_paths} }, @{ $self->{include_path} } ]
+		if ref $vars->{additional_template_paths};
+
+	return $self->{template}->render($tmpl_name, $vars);
+}
+
+=head2 template_vars( $c )
+
+Returns a list of key-value pairs to be used as the context variables
+(i.e. the context object) in the Tenjin templates.
+
+=cut
+
+sub template_vars {
+	my ($self, $c) = @_;
+
+	my $cvar = $self->config->{CATALYST_VAR};
+
+	defined $cvar
+	? ( $cvar => $c )
+	: (
+		c    => $c,
+		base => $c->req->base,
+		name => $c->config->{name}
+	)
+}
+
+=head2 _coerce_paths( $dlim )
+
+=cut
+
+sub _coerce_paths {
+	my ($paths, $dlim) = shift;
+	return () if ( !$paths );
+	return @{$paths} if ( ref $paths eq 'ARRAY' );
+
+	# tweak delim to ignore C:/
+	unless ( defined $dlim ) {
+		$dlim = ( $^O eq 'MSWin32' ) ? ':(?!\\/)' : ':';
+	}
+	return split( /$dlim/, $paths );
+}
+
+no Moose;
+__PACKAGE__->meta->make_immutable();
+
+__END__
 
 =head2 CONFIGURATION
 
@@ -377,60 +438,15 @@ use can use it with L<Catalyst::Plugin::Email>:
 		# Redirect or display a message
 	}
 
-=head1 METHODS
-
-=head2 new
-
-The constructor for the Tenjin view.
-
-=head2 process()
-
-Renders the template specified in C<< $c->stash->{template} >> or
-C<< $c->action >> (the private name of the matched action, with the default extension
-specified by the C<TEMPLATE_EXTENSION> configuration item. Calls L<render> to
-perform actual rendering. Output is stored in C<< $c->response->body >>.
-
-=head2 render( $c, $template, \%args )
-
-Renders the given template and returns output, or throws an exception
-if an error was encountered.
-
-C<$template> is the name of the template you wish to render. If this template
-was not registered with the view yet, it will be searched for in the directories
-set in the C<INCLUDE_PATH> configuration item.
-
-The template variables are set to C<%$args> if $args is a hashref, or 
-C<< %{$c->stash} >> otherwise. In either case the variables are augmented with 
-C<$base> set to C<< $c->req->base >>, C<$name> to
-C<< $c->config->{name} >> and the Catalyst context, which will be set to C<$c>
-unless the C<CATALYST_VAR> configuration item is set to a different name. If so,
-the C<$c>, C<$base> and C<$name> variables are omitted.
-
-=head2 register( $tmpl_name, $tmpl_content )
-
-Registers a template with the view from an arbitrary source, for immediate
-usage in the application. C<$tmpl_name> is the name of the template, used
-to distinguish it from others. C<$tmpl_content> is the body of the template.
-Templates are registered in memory, so don't expect them to remain registered
-between application restarts.
-
-=head2 check_tmpl( $template_name )
-
-Checks if a template named C<$template_name> was already registered with
-the view. Returns 1 if yes, C<undef> if no.
-
-=head2 template_vars()
-
-Returns a list of keys/values to be used as the catalyst variables in the
-template.
-
 =head1 CHANGES
 
 =over
 
-=item * Updated for compatibility with the new and revised L<Tenjin> version.
+=item * 0.04: Created a helper module so views can be created with myapp_create.pl
 
-=item * This module is now based on Moose.
+=item * 0.03: Updated for compatibility with the new and revised L<Tenjin> version.
+
+=item * 0.03: This module is now based on Moose.
 
 =back
 
@@ -487,7 +503,7 @@ Ido Perlmuter E<lt>ido@ido50.netE<gt>. This module was adapted from
 L<Catalyst::View::TT>, so most of the code and even the documentation
 belongs to the authors of L<Catalyst::View::TT>.
 
-Development of this module is done with github at L<http://github.com/ido50/Catalyst--View--Tenjin>.
+Development of this module is done with github at L<http://github.com/ido50/Catalyst-View-Tenjin>.
 
 =head1 LICENSE AND COPYRIGHT
 
