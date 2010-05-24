@@ -8,7 +8,7 @@ use MRO::Compat;
 
 extends 'Catalyst::View';
 
-our $VERSION = '0.041';
+our $VERSION = '0.050';
 
 =head1 NAME
 
