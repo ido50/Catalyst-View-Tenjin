@@ -3,6 +3,8 @@ package Catalyst::Helper::View::Tenjin;
 use strict;
 use warnings;
 
+# ABSTRACT: Helper for creating Tenjin Views
+
 =head1 NAME
 
 Catalyst::Helper::View::Tenjin - Helper for creating Tenjin Views
@@ -88,5 +90,4 @@ it under the same terms as Perl itself.
 
 =cut
 
-no Moose;
 __PACKAGE__->meta->make_immutable();

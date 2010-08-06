@@ -4,19 +4,14 @@ use Moose;
 use namespace::autoclean;
 use Data::Dump 'dump';
 use Tenjin;
-use MRO::Compat;
 
 extends 'Catalyst::View';
 
-our $VERSION = '0.050';
+# ABSTRACT: Tenjin view class for Catalyst.
 
 =head1 NAME
 
 Catalyst::View::Tenjin - Tenjin view class for Catalyst.
-
-=head1 VERSION
-
-0.041
 
 =head1 SYNOPSIS
 
@@ -106,12 +101,10 @@ sub COMPONENT {
 	};
 
 	unless (ref $config->{INCLUDE_PATH} eq 'ARRAY') {
-		my $delim = $config->{DELIMITER};
-		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $delim );
+		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $config->{DELIMITER} );
 		if ( !@include_path ) {
-			my $root = $c->config->{root};
-			my $base = Path::Class::dir( $root, 'base' );
-			@include_path = ( "$root", "$base" );
+			my $base = Path::Class::dir( $c->config->{root}, 'base' );
+			@include_path = ( "$c->config->{root}", "$base" );
 		}
 		$config->{INCLUDE_PATH} = \@include_path;
 	}
@@ -120,7 +113,7 @@ sub COMPONENT {
 		$c->log->debug( "Tenjin Config: ", dump($config) );
 	}
 
-	my $self = $class->new($c, { %$config });
+	my $self = $class->new($c, $config);
 	
 	$self->config($config);
 
@@ -157,9 +150,8 @@ sub process {
 
 	my $output = $self->render($c, $template);
 
-	unless ($c->response->content_type) {
-		$c->response->content_type('text/html; charset=utf-8');
-	}
+	$c->response->content_type('text/html; charset=utf-8')
+		unless ($c->response->content_type);
 
 	$c->response->body($output);
 
@@ -192,7 +184,7 @@ between application restarts.
 sub register {
 	my ($self, $tmpl_name, $tmpl_content) = @_;
 
-	my $template = Tenjin::Template->new(undef, $self->{template}->{init_opts_for_template});
+	my $template = Tenjin::Template->new(undef, $tmpl_name, $self->{template}->{init_opts_for_template});
 	$template->convert($tmpl_content);
 	$template->compile();
 
@@ -271,10 +263,7 @@ sub _coerce_paths {
 	return split( /$dlim/, $paths );
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable();
-
-__END__
 
 =head2 CONFIGURATION
 

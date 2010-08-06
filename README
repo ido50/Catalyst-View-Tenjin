@@ -1,9 +1,6 @@
 NAME
     Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 
-VERSION
-    0.041
-
 SYNOPSIS
             # create your view
             script/myapp_create.pl view Tenjin Tenjin
