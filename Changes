@@ -1,8 +1,10 @@
 Revision history for Perl extension Catalyst::View::Tenjin
 
 {{$NEXT}}
+	- Adapted for changes to Tenjin (this is basically just an encoding change)
+	- Created tests, adapted from Catalyst::View::TT's test suite
 
-0.042     2010-08-06 22:20:04 Asia/Jerusalem
+0.042	2010-08-06 22:20:04 Asia/Jerusalem
 	- Updated to reflect changes in Tenjin
 	- Migrated distribution to use Dist::Zilla
 

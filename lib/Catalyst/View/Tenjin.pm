@@ -1,13 +1,16 @@
 package Catalyst::View::Tenjin;
 
+# ABSTRACT: Tenjin view class for Catalyst.
+
 use Moose;
 use namespace::autoclean;
 use Data::Dump 'dump';
-use Tenjin;
+use Tenjin 0.070001;
+
+our $VERSION = "0.050";
+$VERSION = eval $VERSION;
 
 extends 'Catalyst::View';
-
-# ABSTRACT: Tenjin view class for Catalyst.
 
 =head1 NAME
 
@@ -20,10 +23,10 @@ Catalyst::View::Tenjin - Tenjin view class for Catalyst.
 	
 	# check your new view's configuration
 	__PACKAGE__->config(
-		USE_STRICT => 1,
+		USE_STRICT => 1, # false by default
 		INCLUDE_PATH => [ MyApp->path_to('root', 'templates') ],
 		TEMPLATE_EXTENSION => '.html',
-		ENCODING => 'utf8',
+		ENCODING => 'UTF-8', # this is the default
 	);
 	 
 	# render view from lib/MyApp.pm or lib/MyApp::C::SomeController.pm
@@ -101,30 +104,30 @@ sub COMPONENT {
 	};
 
 	unless (ref $config->{INCLUDE_PATH} eq 'ARRAY') {
-		my @include_path = _coerce_paths( $config->{INCLUDE_PATH}, $config->{DELIMITER} );
-		if ( !@include_path ) {
-			my $base = Path::Class::dir( $c->config->{root}, 'base' );
-			@include_path = ( "$c->config->{root}", "$base" );
+		$config->{INCLUDE_PATH} = [_coerce_paths($config->{INCLUDE_PATH}, $config->{DELIMITER})];
+		unless (scalar @{$config->{INCLUDE_PATH}}) {
+			my $base = Path::Class::dir($c->config->{root}, 'base');
+			$config->{INCLUDE_PATH} = [$c->config->{root}, $base];
 		}
-		$config->{INCLUDE_PATH} = \@include_path;
 	}
 
-	if ($c->debug && $config->{DUMP_CONFIG}) {
-		$c->log->debug( "Tenjin Config: ", dump($config) );
-	}
+	$c->log->debug("Tenjin Config: ".dump($config))
+		if $c->debug && $config->{DUMP_CONFIG};
 
 	my $self = $class->new($c, $config);
 	
 	$self->config($config);
 
-	if ($config->{USE_STRICT}) {
-		$Tenjin::USE_STRICT = 1;
-	}
-	if ($config->{ENCODING}) {
-		$Tenjin::ENCODING = $config->{ENCODING};
-	}
+	$Tenjin::USE_STRICT = 1
+		if $config->{USE_STRICT};
+
+	$Tenjin::ENCODING = $config->{ENCODING}
+		if $config->{ENCODING};
 	
-	$self->{template} = Tenjin->new({ path => $config->{INCLUDE_PATH}, postfix => $config->{TEMPLATE_EXTENSION} });
+	$self->{template} = Tenjin->new({
+		path => $config->{INCLUDE_PATH},
+		postfix => $config->{TEMPLATE_EXTENSION},
+	});
 
 	return $self;
 };
@@ -151,7 +154,7 @@ sub process {
 	my $output = $self->render($c, $template);
 
 	$c->response->content_type('text/html; charset=utf-8')
-		unless ($c->response->content_type);
+		unless $c->response->content_type;
 
 	$c->response->body($output);
 
@@ -212,7 +215,8 @@ the C<$c>, C<$base> and C<$name> variables are omitted.
 sub render {
 	my ($self, $c, $tmpl_name, $args) = @_;
 
-	$c->log->debug(qq/Rendering template "$tmpl_name"/) if $c->debug;
+	$c->log->debug("Rendering template \"$tmpl_name\"")
+		if $c->debug;
 
 	my $vars = {
 		(ref $args eq 'HASH' ? %$args : %{ $c->stash() }),
@@ -239,12 +243,12 @@ sub template_vars {
 	my $cvar = $self->config->{CATALYST_VAR};
 
 	defined $cvar
-	? ( $cvar => $c )
-	: (
-		c    => $c,
-		base => $c->req->base,
-		name => $c->config->{name}
-	)
+		? ( $cvar => $c )
+		: (
+			c    => $c,
+			base => $c->req->base,
+			name => $c->config->{name}
+		);
 }
 
 =head2 _coerce_paths( $dlim )
@@ -253,17 +257,18 @@ sub template_vars {
 
 sub _coerce_paths {
 	my ($paths, $dlim) = shift;
-	return () if ( !$paths );
-	return @{$paths} if ( ref $paths eq 'ARRAY' );
+	return () unless $paths;
+	return @{$paths} if ref $paths eq 'ARRAY';
 
 	# tweak delim to ignore C:/
-	unless ( defined $dlim ) {
+	unless (defined $dlim) {
 		$dlim = ( $^O eq 'MSWin32' ) ? ':(?!\\/)' : ':';
 	}
+
 	return split( /$dlim/, $paths );
 }
 
-__PACKAGE__->meta->make_immutable();
+__PACKAGE__->meta->make_immutable;
 
 =head2 CONFIGURATION
 
@@ -427,26 +432,6 @@ use can use it with L<Catalyst::Plugin::Email>:
 		# Redirect or display a message
 	}
 
-=head1 CHANGES
-
-=over
-
-=item * 0.04: Created a helper module so views can be created with myapp_create.pl
-
-=item * 0.03: Updated for compatibility with the new and revised L<Tenjin> version.
-
-=item * 0.03: This module is now based on Moose.
-
-=back
-
-=head1 TODO
-
-=over
-
-=item * Create appropriate tests.
-
-=back
-
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-tenjin at rt.cpan.org>,
@@ -458,7 +443,7 @@ on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Catalyst::View::Tenjin
+	perldoc Catalyst::View::Tenjin
 
 You can also look for information at:
 
@@ -488,15 +473,15 @@ L<Tenjin>, L<Catalyst>, L<Catalyst::View::TT>
 
 =head1 AUTHOR
 
-Ido Perlmuter E<lt>ido@ido50.netE<gt>. This module was adapted from
+Ido Perlmuter C<< <ido at ido50.net> >>. This module was adapted from
 L<Catalyst::View::TT>, so most of the code and even the documentation
 belongs to the authors of L<Catalyst::View::TT>.
 
-Development of this module is done with github at L<http://github.com/ido50/Catalyst-View-Tenjin>.
+Development of this module is tracked via github at L<http://github.com/ido50/Catalyst-View-Tenjin>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2009-2010 the aforementioned authors.
+Copyright (c) 2009-2011 the aforementioned authors.
 
 This program is free software, you can redistribute it and/or modify it 
 under the same terms as Perl itself.

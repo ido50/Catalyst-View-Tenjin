@@ -1,9 +1,9 @@
 package Catalyst::Helper::View::Tenjin;
 
+# ABSTRACT: Helper for creating Tenjin Views
+
 use strict;
 use warnings;
-
-# ABSTRACT: Helper for creating Tenjin Views
 
 =head1 NAME
 
@@ -64,7 +64,7 @@ __PACKAGE__->config(
 	#USE_STRICT => 1,
 	INCLUDE_PATH => [ [% app %]->path_to('root', 'templates') ],
 	TEMPLATE_EXTENSION => '.html',
-	ENCODING => 'utf8',
+	#ENCODING => 'UTF-8', # this is the default
 );
 
 =head1 NAME
@@ -90,4 +90,4 @@ it under the same terms as Perl itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable();
+__PACKAGE__->meta->make_immutable;
