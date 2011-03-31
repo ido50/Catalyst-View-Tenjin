@@ -1,6 +1,9 @@
 Revision history for Perl extension Catalyst::View::Tenjin
 
 {{$NEXT}}
+	- Added version number to Helper::View::Tenjin to prevent CPAN index failure
+
+0.050     2011-03-31 20:46:42 Asia/Jerusalem
 	- Adapted for changes to Tenjin (this is basically just an encoding change)
 	- Created tests, adapted from Catalyst::View::TT's test suite
 

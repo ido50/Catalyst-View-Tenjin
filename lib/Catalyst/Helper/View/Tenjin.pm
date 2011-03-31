@@ -5,6 +5,9 @@ package Catalyst::Helper::View::Tenjin;
 use strict;
 use warnings;
 
+our $VERSION = "0.050001";
+$VERSION = eval $VERSION;
+
 =head1 NAME
 
 Catalyst::Helper::View::Tenjin - Helper for creating Tenjin Views
